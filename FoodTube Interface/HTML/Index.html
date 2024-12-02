@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Afslank app</title>
+    <link rel="stylesheet" href="/CSS/Main.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+    <style>
+    </style>
+</head>
+
+<body>
+
+    <h1>Challenges</h1>  
+    <div class="grid-container">
+        <div class="item1" style="background: rgb(245,245,245); background: linear-gradient(149deg, rgba(245,245,245,1) 50%, rgba(104,218,76,1) 100%);">
+            <p>Easy challenge</p>
+            <button onclick="addData(50, this)" class="button1">Complete</button>
+        </div>
+        <div class="item2" style="background: rgb(245,245,245); background: linear-gradient(149deg, rgba(245,245,245,1) 50%, rgba(254,234,58,1) 100%);">
+            <p>Medium challenge</p>
+            <button onclick="addData(100, this)" class="button1">Complete</button>
+        </div>
+        <div class="item3">
+            <p>Hard challenge</p>
+            <button onclick="addData(250, this)" class="button1">Complete</button>
+        </div>
+    </div>
+
+    <h2>Progress</h2>
+
+    <div id="scoreDisplay">
+        Huidige score: 0
+    </div>
+
+    <canvas id="myChart" style="width:100%; max-width:600px; margin: auto;"></canvas>
+
+    <button onclick="nextDay()" class="nextday">Start Next Day</button>
+
+    <h3>Leaderboard</h3>
+    
+    <div id="leaderboard">
+        <div class="bar">1. Tegenstander 1 score: 2000</div>
+        <div class="bar">2. Tegenstander 2 score: 1000</div>
+        <div class="bar">3. Tegenstander 3 score: 500</div>
+        <div class="bar">4. Tegenstander 4 score: 250</div>
+        <div class="bar">5. Tegenstander 5 score: 100</div>
+        <div class="bar">6. Your current score: 0</div>
+    </div>
+
+    <h4>Monthly Overview June</h4>
+    <div id="juneOverview"></div>
+    <div id="dayDetails">
+        <h4 id="dayTitle"></h4>
+        <p id="yourScore"></p>
+        <p id="highestScore"></p>
+        <p id="averageScore"></p>
+        <button onclick="hideDetails()" class="closeDetails">Close</button>
+    </div>
+
+    <script>
+        let dayCount = 1;
+        const xValues = ["Day " + dayCount];  
+        const yValues = [0];  
+        const opponentScores = [2000, 1000, 500, 250, 100];
+        
+        const scoreDisplay = document.getElementById("scoreDisplay");
+        const leaderboard = document.getElementById("leaderboard");
+
+        const chart = new Chart("myChart", {
+            type: "line",
+            data: {
+                labels: xValues,
+                datasets: [{
+                    fill: false,
+                    lineTension: 0,
+                    backgroundColor: "rgba(0,0,255,1.0)",
+                    borderColor: "rgba(0,0,255,0.1)",
+                    data: yValues
+                }]
+            },
+            options: {
+                legend: { display: false },
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: true,
+                            suggestedMax: 250
+                        },
+                        display: true
+                    }],
+                    xAxes: [{ display: true }]
+                }
+            }
+        });
+
+        function updateYAxisRange() {
+            const maxYValue = Math.max(...yValues) + 200;
+            chart.options.scales.yAxes[0].ticks.max = maxYValue;
+            chart.update();
+        }
+
+        function updateScoreDisplay() {
+            const currentScore = yValues[yValues.length - 1];
+            scoreDisplay.textContent = "Huidige score: " + currentScore;
+
+            updateLeaderboard(currentScore);
+        }
+
+        function updateLeaderboard(currentScore) {
+            const scores = [...opponentScores, currentScore].sort((a, b) => b - a);
+
+            leaderboard.innerHTML = "";
+            scores.forEach((score, index) => {
+                const div = document.createElement("div");
+                div.className = "bar";
+                if (score === currentScore) {
+                    div.textContent = `${index + 1}. Your current score: ${currentScore}`;
+                    div.style.fontWeight = "bold";
+                    div.style.color = "blue";
+                } else {
+                    div.textContent = `${index + 1}. Tegenstander score: ${score}`;
+                }
+                leaderboard.appendChild(div);
+            });
+        }
+
+        function addData(amount, button) {
+            yValues[yValues.length - 1] += amount;
+
+            updateYAxisRange();
+            updateScoreDisplay();
+
+            button.disabled = true;
+            button.style.backgroundColor = "green";
+            button.style.color = "white";
+        }
+
+        function nextDay() {
+            dayCount++;
+            xValues.push("Day " + dayCount);
+            yValues.push(yValues[yValues.length - 1]);
+
+            const buttons = document.querySelectorAll(".button1");
+            buttons.forEach(button => {
+                button.disabled = false;
+                button.style.backgroundColor = "white";
+                button.style.color = "black";
+            });
+
+            updateYAxisRange();
+            updateScoreDisplay();
+        }
+
+        
+        const juneDays = [];
+        for (let i = 1; i <= 30; i++) {
+            juneDays.push({
+                day: `June ${i}`,
+                yourScore: Math.floor(Math.random() * 500),
+                highestScore: 2000 + Math.floor(Math.random() * 500),
+                averageScore: 800 + Math.floor(Math.random() * 300),
+            });
+        }
+
+        const juneOverview = document.getElementById("juneOverview");
+        const dayDetails = document.getElementById("dayDetails");
+        const dayTitle = document.getElementById("dayTitle");
+        const yourScore = document.getElementById("yourScore");
+        const highestScore = document.getElementById("highestScore");
+        const averageScore = document.getElementById("averageScore");
+
+        
+        const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+        daysOfWeek.forEach(day => {
+            const headerDiv = document.createElement("div");
+            headerDiv.textContent = day;
+            headerDiv.className = "header";
+            juneOverview.appendChild(headerDiv);
+        });
+
+
+        
+        function showDetails(day, element) {
+    
+    const previouslySelected = document.querySelector("#juneOverview .selected");
+    if (previouslySelected) {
+        previouslySelected.classList.remove("selected");
+    }
+
+   
+    element.classList.add("selected");
+
+    
+    dayTitle.textContent = day.day;
+    yourScore.textContent = `Your Score: ${day.yourScore}`;
+    highestScore.textContent = `Highest Score: ${day.highestScore}`;
+    averageScore.textContent = `Average Score: ${day.averageScore}`;
+    dayDetails.style.display = "block";
+}
+
+juneDays.forEach((day, index) => {
+    const dayDiv = document.createElement("div");
+    dayDiv.textContent = day.day;
+    dayDiv.addEventListener("click", () => showDetails(day, dayDiv)); 
+    juneOverview.appendChild(dayDiv);
+});
+
+        
+        function hideDetails() {
+            dayDetails.style.display = "none";
+        }
+
+        updateLeaderboard(0);
+
+    </script>
+
+</body>
+</html>
